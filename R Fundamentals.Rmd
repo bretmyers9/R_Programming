@@ -1,0 +1,100 @@
+---
+title: "R Fundamentals"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+**1. Assigning and Evaluating Objects in R**
+
+A fundamental idea in both R and Python is the ability to assign and evaluate objects. We will get into different data types in R but basically, any data type can be assigned to an object. For simplicity, we will begin with numbers. 
+
+Let a be assigned a value of 3 and let b be assigned a value of 4. Here is how assignments are carried out:
+
+
+
+
+
+```{r}
+a <- 3
+b <- 4
+```
+
+It is more traditional in R to use arrows to assign objects. You still could use an "=" sign, but we will be using arrows in this course. The key with the arrows is that you always put to the object name. You could also use right pointed arrows (although left is more common). 
+
+```{r}
+3 -> a
+4 -> b
+```
+
+Given that the code has been run above, you have now created objects a and b in your R environment. You should see this in your top right window. It should show that a and b are objects with values of 3 and 4 respectively. 
+
+If you want to evaluate the objects, you simply just type the object name and hit run:
+
+```{r}
+a
+b
+```
+
+**2. Using the objects**
+
+Now that a and b have been defined, they can be used for various purposes. Here are some simple examples of how they can be used to carry out arithmetic operations:
+
+```{r}
+a + b #addition
+a * b #multiplication
+a - b #subtraction
+a / b #division
+a ^ b #exponentation
+```
+**Your turn** 
+
+In the Pythagorean theorem, a and b are the lengths of the legs of a right triangle. c is the length of the hypotenuse. If this is the case, a^2 + b^2 = c^2.  Let's say that a = 6 and b = 8. Use code to show that a^2 + b^2 = c^2
+
+
+**3. Installing and loading packages**
+
+The most important package in R for this course will be the tidyverse package. If you have not installed this package, you can do so be doing the following:
+
+```{r}
+#install.packages("tidyverse")
+```
+
+Packages only need to be installed once. Make sure that you have confirmation that the package installation process was successful. You can look at the "Packages" table in the lower right window of R studio and search to see if the package you installed is showing up. 
+
+In most cases in this course, we will be installing packages using the install.packages() function. This imports the package from R central repository called Comprehensive R Archive Network (CRAN).
+
+Once a package is installed, it is loaded in using the library() function. You should do this in the start of a new session where you intend to install the package. 
+
+```{r}
+library(tidyverse)
+```
+
+You may receive some messages when a package is loaded in. These are typically advisory messages and not error messages. The potential error message you would want to look out for is that "the package is not found". This means that it was not installed. In later exercises, we will utilize more of the subpackages and functions contained in tidyverse
+
+**Your turn**
+
+One package we will be using later in the course if a package called lubridate. Install and load this pacakge into R. 
+
+
+**4. Creating a Vector in R**
+
+The standard way to create a vector in R is to use the c() function. Let's create a vector of the typicall undergraduate year designations: Freshman, Sophomore, Junior, Senior. Let's store the vector as an object called college_years
+
+```{r}
+college_years = c("Freshman", "Sophomore", "Junior",
+                  "Senior")
+college_years
+```
+
+Here is how to extract one element of the vector. If you want Sophomore, then that would be the second element of the vector:
+
+```{r}
+college_years[2]
+```
+If you want Sophomore and Junior, then you would do the following:
+
+```{r}
+college_years[c(2,3)]
+```
+
