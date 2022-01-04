@@ -1,0 +1,498 @@
+---
+title: "Data Wrangling in R Tutorial"
+output:
+  html_document:
+    df_print: paged
+---
+
+# 1 Data Importing in R
+
+
+## Required Packages
+
+The required packages for this step are as follows:
+
+
+```{r, message = F}
+library(tidyverse)
+library(lubridate)
+library(readxl)
+```
+
+*Note* Install the readxl and lubridate packages if you have not already
+
+## Setting your working directory in R
+
+A working directory is a location in your local machine where R will import/export files in which you do not specify the path location. You can check your working directory in R by running the following code
+
+```{r}
+getwd()
+```
+
+
+If you would prefer to set your working directory to something else, you could do so by entering the code below
+
+
+
+```{r, eval = F}
+setwd('Enter your path here')
+```
+
+
+## Reading in a csv File in R
+
+* For this lesson, download the 'Bike Share Demand.xlsx' and 'Bike Share Demand.csv' files and store them in your working directory.  
+
+* Store the csv import as an object called bikes
+
+```{r}
+Bikes <- read_csv("Bike Share Demand.csv")
+
+```
+
+## Reading in Excel Files in R
+
+```{r }
+Bikes_xl <- read_excel("Bike Share Demand.xlsx")
+```
+
+## Specifying path location upon data import
+
+My "Bike Share Demand.csv" and "Bike Share Demand.xlsx" files are located in a folder that shows like this when I go into the properties of the files: "C:\Users\bmyers01\Desktop\My directory\R\Courses\MSA 8105".If either I don't want to worry about working directories, or if I'm having trouble with my working directory, I could just do the following:
+
+```{r}
+Bikes <- read_csv("C:\\Users\\bmyers01\\Desktop\\My directory\\R\\Courses\\MSA 8105\\Bike Share Demand.csv")
+```
+Notice that you need to do double backslashes "//" to separate the folders. 
+
+
+## Getting an overview of Data Set in R
+
+If you would like to see an overview of the data set, the str() funciton is helpful
+
+```{r}
+str(Bikes)
+```
+
+
+## Examining a subset of the data in R
+
+You can use the head() function to look at the first n rows of data. As a default, the head function will show the first 6 rows, but you can specify how many. 
+We will start using the %>% "pipe" operator here. This operator basically arrange the code in a more intuitive way. Instead of head(Bikes, 5), we'll do the following 
+
+```{r}
+Bikes %>%
+  head(5)
+```
+
+As you can see, this returns the first five rows of data. If you want to do 20, then do a few things. 1) Specify rows.print = 20 in the braces of the code chunk and two, edit the code to do 20 rows as opposed to 5. 
+
+```{r rows.print = 20}
+Bikes %>%
+  head(20)
+```
+
+
+## Exporting an Object to a CSV File in R
+
+If at any point you wanted to export an object as a .csv file, you can do so using (write_csv).  I'll call this file "Bikes_export.csv" as to not overwrite the orginal file we loaded in. 
+
+```{r}
+write_csv(Bikes, "Bikes_export.csv")
+```
+
+* You should now see a files called "Bikes_season_1.csv" in your working directory
+* R can write in other formats as well
+
+
+#2 Data cleaning in R
+
+We'll go over a few approaches in dealing with missing values in R. 
+
+## Identfying rows with missing values
+
+You can identify if there rows with missing case by using the following code:
+
+```{r}
+Bikes[!complete.cases(Bikes), ]
+```
+## Dropping rows with missing values
+
+You can drop rows with missing values using the following code:
+
+```{r}
+Bikes %>%
+  drop_na()
+```
+Of course, if you want to store this change, you would need to assign it to an object. For now, we'll create a different object called Bikes_complete. 
+
+```{r}
+Bikes %>%
+  drop_na() -> Bikes_complete
+```
+
+## Replacing NAs with a value
+
+There are times where you may want to replace NAs with some other type of value. In the context of Bikes data, it is a date/time that is unknown. I'll do a quick demo of how to do an NA replacement. In this case, it will replace both NA's with a value called "unknown". 
+
+I'm going to using the tail() function to return the bottom six rows. You will see how the na's were replaced with "unknown". However, we will not store this change. 
+
+```{r}
+Bikes %>%
+  mutate_all(replace_na, "unknown") %>%
+  tail()
+```
+Going forward, let's have Bikes be void of missing values:
+
+```{r}
+Bikes <- Bikes_complete
+```
+
+
+## Using Lubridate Package to Deal with Dates in R
+
+We will now take advantage of the lubridate package. In addition, you'll get an introduction to the mutate() function which can be used to either overwrite and existing column, or introduce a new one. 
+
+Remember that the datetime column gets imported as a character column. Let's say we want it to be in a date/time formate. We can use a function within lubridate called mdy_hm() which takes character data in the form of month, day, year, hour, minute, and officially converts it into a date. 
+
+Here is the code:
+```{r}
+Bikes %>% mutate(datetime = mdy_hm(datetime)) -> Bikes
+```
+
+If you now use the str() function, you can examine the new data type for the datetime column:
+
+```{r}
+str(Bikes)
+```
+POSIXct reflects a date format. 
+
+
+## Generating a Month Column in R
+
+Given that you have a date column like datetime, you can extract the month, day, or time. Let's do Month here. If I want to extract the month in numeric form, I can simply do the following:
+
+
+```{r}
+Bikes %>% mutate(Month = month(datetime)) -> Bikes
+```
+
+
+If I want to have month in a text form, then I can do the following:
+
+```{r}
+Bikes %>% mutate(Month = month(datetime, label = T)) -> Bikes
+```
+
+Let's stick with the text form moving forward. 
+
+
+
+## Converting a Column from Numeric to Character in R
+
+In this data set, season is represented as 1, 2, 3, 4. We have a view options to deal with this. First, we could just leave it as numeric, but supposed we wanted to have R identify it as a character. We could use the as.character() function. 
+
+Also, we can identify a column by using the "$". The standard form is df$column_name. In this case, Bikes$season. 
+
+Code is as follows:
+
+
+```{r}
+Bikes$season <- as.character(Bikes$season)
+```
+
+## Conditional expression using case_when()
+
+We have now made the season column in character format. Suppose we want to establish a conditional such that we will show "winter", "spring", "fall", "winter" as opposed to  "1", "2", "3", "4". We can set a conditional expression to change these using mutate() and case_when(). 
+
+```{r}
+Bikes %>%
+  mutate(season = case_when(
+                    season == "1" ~"winter",
+                    season == "2" ~ "spring",
+                    season == "3" ~ "summer",
+                    season == "4" ~ "fall")) -> Bikes
+```
+
+## Renaming Columns 
+
+One column that is confusing is the "count" column. Let's call this "total" instead. We can use the rename() function to do this. 
+
+```{r}
+Bikes %>%
+  rename(total = count) -> Bikes
+```
+
+## Rearranging columns 
+
+You may not like right now that the Month column is at the end when you view the data. Using the select() function, you can define the order of your columns. Here is a longhand way to do it. 
+
+```{r}
+Bikes %>%
+  select(datetime, Month, season, holiday, workingday, weather, temp, atemp, humidity, casual, registered, total)
+```
+Here is a shorter hand way:
+
+```{r}
+Bikes %>%
+  select(datetime, Month, everything())
+```
+We'll go with the short hand:
+
+```{r}
+Bikes %>%
+  select(datetime, Month, everything()) -> Bikes
+```
+
+#3 Data Transformation in R
+
+We will now got through some techniques to transform data.
+
+## Filtering data
+
+We may only be interested in certain rows of the larger Bikes data set. Suppose we only wanted to capture data relating to the fall season. We can use the filter() function to do this. 
+
+```{r}
+Bikes %>%
+  filter(season == "fall")
+```
+Let's say we wanted to do fall and type 2 weather. We can do the following:
+
+```{r}
+Bikes %>%
+  filter(season == "fall" & weather == 2)
+```
+
+
+Let's say we wanted to show fall or spring. A good way to do this is using the %in% operator. Alternatively, you could use "|" which represents the or condition:
+
+```{r}
+Bikes %>%
+  filter(season %in% c("fall", "spring"))
+```
+
+
+## Sorting data
+
+We can sort data using the arrange() function. 
+
+
+Here is ascending order by total:
+
+```{r}
+Bikes %>%
+  arrange(total)
+```
+
+
+Suppose I would like to sort the data in descending order by total. I can do this doing the following:
+
+```{r}
+Bikes %>%
+  arrange(-total)
+```
+
+You could sort on multiple columns. Let's do ascending for both total and temp:
+
+```{r}
+Bikes %>%
+  arrange(total, temp)
+```
+
+
+
+While the data was sorted, you have to scroll over to see the total column. We can use select() to narrow the columns to those of more interest. Let's do this ascending order of total and temp. Let's only select datetime, temp, and total:
+
+
+```{r}
+Bikes %>%
+  arrange(total, temp) %>%
+  select(datetime, temp, total)
+```
+
+## Aggregating/Summarizing data
+
+Let's say we would like to know the average demand by season. This would involve group_by() followed by summarize(). We would do as follows:
+
+```{r}
+Bikes %>%
+  group_by(season) %>%
+  summarize(Average_demand = mean(total))
+```
+
+If you want to store this table, you would make sure to do an assignment:
+
+```{r}
+Bikes %>%
+  group_by(season) %>%
+  summarize(Average_demand = mean(total)) -> season_table
+```
+
+It's possible to do other statistical measures. Let's add in median and standard deviation. 
+
+```{r}
+Bikes %>%
+  group_by(season) %>%
+  summarize(Average_demand = mean(total),
+            Median_demand = median(total),
+            Std_demand = sd(total))
+```
+
+If you want to round the whole table to two decimals, you could do the following using mutate_if():
+
+```{r}
+Bikes %>%
+  group_by(season) %>%
+  summarize(Average_demand = mean(total),
+            Median_demand = median(total),
+            Std_demand = sd(total)) %>%
+  mutate_if(is.numeric, ~round(.,2))
+```
+
+You can group by more than one variable. Since weather condition 4 is very rare, let's filter that out, group by season and weather, and get average demand. This would be executed as follows:
+
+```{r}
+Bikes %>%
+  filter(weather != 4) %>%
+  group_by(season, weather) %>%
+  summarize(avg_demand = mean(total)) 
+  
+```
+
+It would also help to have the count of each combination of season and weather in the aggregation. This can be done using the n() function. This is executed as follows:
+
+```{r}
+Bikes %>%
+  filter(weather != 4) %>%
+  group_by(season, weather) %>%
+  summarize(avg_demand = mean(total),
+            count = n()) 
+```
+
+## Gathering data
+
+Let's say we want to "gather" the casual and registered columns together and create a column that identifies the type of customer "casual" or "registered". The impact of this is that is will make the dataset longer because there will need to be rows that correspond to "casual" customers and rows that correspond to "registered" customers. This kind of transformation can be useful for data visualization purposes. 
+
+```{r}
+Bikes %>%
+  gather(key = "type", value = "value", registered, casual)
+```
+As you can see, there are now double the amount of rows in the data set. There is the create of a "type" column that identifies the type of customer and a "value" column that represents the demand value for the hour of the day. 
+
+## Spreading Data
+
+The opposite of gathering data is spreading data. Let's take what we did above, but reverse it back. First, we'll store what we created before as a separate object
+
+```{r}
+Bikes %>%
+  gather(key = "type", value = "value", registered, casual) -> Bikes_gather
+```
+
+Now, we'll spread the data back out to have the same look as the original Bikes object. We'll want to identify the "type" column as the key, and the "value" column as the value. 
+
+```{r}
+Bikes_gather %>%
+  spread(key = "type", value = "value")
+```
+As you can see, the casual and registered columns have returned. The number of rows are now the same as before. 
+
+# 4 Relational Data
+
+The two most common joins when it comes to relational data are inner joins and left joins. 
+
+## inner joins
+
+
+For this section, import the "Dates and Days_2011_2012.xlsx" and "Dates and Days_2012_2013.xlsx" files. Store the first as on object DD_11_12 and the second as an object DD_12_13. 
+
+```{r}
+DD_11_12 <- read_excel("C:\\Users\\bmyers01\\Desktop\\My directory\\R\\Courses\\MSA 8105\\Dates and Days_2011_2012.xlsx")
+
+DD_12_13 <- read_excel("C:\\Users\\bmyers01\\Desktop\\My directory\\R\\Courses\\MSA 8105\\Dates and Days_2012_2013.xlsx")
+```
+
+
+In order to create a common column with the DD_11_12 and D_12_13 tables, lets create a "date" column in the Bikes table.  
+```{r}
+Bikes %>%
+  mutate(date = date(datetime)) -> Bikes
+```
+
+
+Let's first do an inner_join between Bikes and DD_11_12. 
+
+```{r}
+Bikes %>%
+  inner_join(DD_11_12, by = c("date" = "Date"))
+```
+Note that 10,886 rows and 15 columns were returned. This is because every date in the Bikes table had a match with the DD_11_12 table, and the new column of Week_day was brought over
+
+Now, let's do the same thing, but this time, with the DD_12_13 table. 
+
+```{r}
+Bikes %>%
+  inner_join(DD_12_13, by = c("date" = "Date"))
+```
+Notice, this table only has 5,464 rows. This is because the only rows that match are those in the year 2012. 
+
+## left joins
+
+Now, let's do a left join, where we'll start with Bikes table, the join over DD_11_12. 
+
+```{r}
+Bikes %>%
+  left_join(DD_11_12, by = c("date" = "Date"))
+```
+This yielded the exact same result as an inner join with Bikes and DD_11_12. This is because for every row in Bikes, there was a match in DD_11_12 and the new column "Week_day" was brought over. 
+
+Let's now see what happens when we do a left join between Bikes and DD_12_13:
+
+```{r}
+Bikes %>%
+  left_join(DD_12_13, by = c("date" = "Date"))
+```
+
+While the dimensionality of the table is the same as when we left_join with DD_11_12, NAs occur for any date in Bikes that occured in 2011. This is because there was no match in the DD_12_13 file for these dates. 
+
+## Joins when matching columns have the same column name. 
+
+Suppose we rename the "date" column in the Bikes table to "Date". 
+
+```{r}
+Bikes %>%
+  rename(Date = date) -> Bikes
+```
+
+Now you could do an inner join as follows:
+
+```{r}
+Bikes %>%
+  inner_join(DD_11_12)
+```
+And a left join as follows:
+
+```{r}
+Bikes %>%
+  left_join(DD_11_12)
+```
+## Binding rows of two tables with matching columns
+
+
+You can use the colnames() function to check out the column names of a table. 
+
+```{r}
+colnames(DD_11_12)
+```
+```{r}
+colnames(DD_12_13)
+```
+
+As you can see, the column names are the same. 
+
+Given that two tables have the same column names, you can bind the tables together, which is equivalent to "stacking them" on top of each other. 
+
+```{r}
+DD_11_12%>%
+  bind_rows(DD_12_13)
+```
+As you can see, one combined table has now been formed. 
